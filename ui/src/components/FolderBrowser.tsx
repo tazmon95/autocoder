@@ -159,7 +159,7 @@ export function FolderBrowser({ onSelect, onCancel, initialPath }: FolderBrowser
 
           {breadcrumbs.map((crumb, index) => (
             <div key={crumb.path} className="flex items-center">
-              {index > 0 && <ChevronRight size={14} className="text-gray-400 mx-1" />}
+              {index > 0 && <ChevronRight size={14} className="text-[var(--color-neo-text-muted)] mx-1" />}
               <button
                 onClick={() => handleNavigate(crumb.path)}
                 className={`
@@ -187,7 +187,7 @@ export function FolderBrowser({ onSelect, onCancel, initialPath }: FolderBrowser
                 className={`
                   neo-btn neo-btn-ghost py-1 px-2 text-sm
                   flex items-center gap-1
-                  ${currentPath?.startsWith(drive.letter) ? 'bg-[var(--color-neo-progress)] text-white' : ''}
+                  ${currentPath?.startsWith(drive.letter) ? 'bg-[var(--color-neo-progress)] text-[var(--color-neo-text-on-bright)]' : ''}
                 `}
               >
                 <HardDrive size={14} />
@@ -240,7 +240,7 @@ export function FolderBrowser({ onSelect, onCancel, initialPath }: FolderBrowser
                   )}
                   <span className="truncate flex-1 text-[var(--color-neo-text)]">{entry.name}</span>
                   {entry.has_children && (
-                    <ChevronRight size={14} className="ml-auto text-gray-400 flex-shrink-0" />
+                    <ChevronRight size={14} className="ml-auto text-[var(--color-neo-text-muted)] flex-shrink-0" />
                   )}
                 </button>
               ))}

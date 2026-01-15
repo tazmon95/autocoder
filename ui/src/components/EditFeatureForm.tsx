@@ -1,28 +1,35 @@
 import { useState, useId } from 'react'
-import { X, Plus, Trash2, Loader2, AlertCircle } from 'lucide-react'
-import { useCreateFeature } from '../hooks/useProjects'
+import { X, Save, Plus, Trash2, Loader2, AlertCircle } from 'lucide-react'
+import { useUpdateFeature } from '../hooks/useProjects'
+import type { Feature } from '../lib/types'
 
 interface Step {
   id: string
   value: string
 }
 
-interface AddFeatureFormProps {
+interface EditFeatureFormProps {
+  feature: Feature
   projectName: string
   onClose: () => void
+  onSaved: () => void
 }
 
-export function AddFeatureForm({ projectName, onClose }: AddFeatureFormProps) {
+export function EditFeatureForm({ feature, projectName, onClose, onSaved }: EditFeatureFormProps) {
   const formId = useId()
-  const [category, setCategory] = useState('')
-  const [name, setName] = useState('')
-  const [description, setDescription] = useState('')
-  const [priority, setPriority] = useState('')
-  const [steps, setSteps] = useState<Step[]>([{ id: `${formId}-step-0`, value: '' }])
+  const [category, setCategory] = useState(feature.category)
+  const [name, setName] = useState(feature.name)
+  const [description, setDescription] = useState(feature.description)
+  const [priority, setPriority] = useState(String(feature.priority))
+  const [steps, setSteps] = useState<Step[]>(() =>
+    feature.steps.length > 0
+      ? feature.steps.map((step, i) => ({ id: `${formId}-step-${i}`, value: step }))
+      : [{ id: `${formId}-step-0`, value: '' }]
+  )
   const [error, setError] = useState<string | null>(null)
-  const [stepCounter, setStepCounter] = useState(1)
+  const [stepCounter, setStepCounter] = useState(feature.steps.length || 1)
 
-  const createFeature = useCreateFeature(projectName)
+  const updateFeature = useUpdateFeature(projectName)
 
   const handleAddStep = () => {
     setSteps([...steps, { id: `${formId}-step-${stepCounter}`, value: '' }])
@@ -43,26 +50,37 @@ export function AddFeatureForm({ projectName, onClose }: AddFeatureFormProps) {
     e.preventDefault()
     setError(null)
 
-    // Filter out empty steps
     const filteredSteps = steps
       .map(s => s.value.trim())
       .filter(s => s.length > 0)
 
     try {
-      await createFeature.mutateAsync({
-        category: category.trim(),
-        name: name.trim(),
-        description: description.trim(),
-        steps: filteredSteps,
-        priority: priority ? parseInt(priority, 10) : undefined,
+      await updateFeature.mutateAsync({
+        featureId: feature.id,
+        update: {
+          category: category.trim(),
+          name: name.trim(),
+          description: description.trim(),
+          steps: filteredSteps,
+          priority: parseInt(priority, 10),
+        },
       })
-      onClose()
+      onSaved()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create feature')
+      setError(err instanceof Error ? err.message : 'Failed to update feature')
     }
   }
 
   const isValid = category.trim() && name.trim() && description.trim()
+
+  // Check if any changes were made
+  const currentSteps = steps.map(s => s.value.trim()).filter(s => s)
+  const hasChanges =
+    category.trim() !== feature.category ||
+    name.trim() !== feature.name ||
+    description.trim() !== feature.description ||
+    parseInt(priority, 10) !== feature.priority ||
+    JSON.stringify(currentSteps) !== JSON.stringify(feature.steps)
 
   return (
     <div className="neo-modal-backdrop" onClick={onClose}>
@@ -73,7 +91,7 @@ export function AddFeatureForm({ projectName, onClose }: AddFeatureFormProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b-3 border-[var(--color-neo-border)]">
           <h2 className="font-display text-2xl font-bold">
-            Add Feature
+            Edit Feature
           </h2>
           <button
             onClick={onClose}
@@ -123,9 +141,9 @@ export function AddFeatureForm({ projectName, onClose }: AddFeatureFormProps) {
                 type="number"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
-                placeholder="Auto"
                 min="1"
                 className="neo-input"
+                required
               />
             </div>
           </div>
@@ -162,7 +180,7 @@ export function AddFeatureForm({ projectName, onClose }: AddFeatureFormProps) {
           {/* Steps */}
           <div>
             <label className="block font-display font-bold mb-2 uppercase text-sm">
-              Test Steps (Optional)
+              Test Steps
             </label>
             <div className="space-y-2">
               {steps.map((step, index) => (
@@ -206,15 +224,15 @@ export function AddFeatureForm({ projectName, onClose }: AddFeatureFormProps) {
           <div className="flex gap-3 pt-4 border-t-3 border-[var(--color-neo-border)]">
             <button
               type="submit"
-              disabled={!isValid || createFeature.isPending}
+              disabled={!isValid || !hasChanges || updateFeature.isPending}
               className="neo-btn neo-btn-success flex-1"
             >
-              {createFeature.isPending ? (
+              {updateFeature.isPending ? (
                 <Loader2 size={18} className="animate-spin" />
               ) : (
                 <>
-                  <Plus size={18} />
-                  Create Feature
+                  <Save size={18} />
+                  Save Changes
                 </>
               )}
             </button>

@@ -1,7 +1,28 @@
 import { useState } from 'react'
-import { X, CheckCircle2, Circle, SkipForward, Trash2, Loader2, AlertCircle } from 'lucide-react'
+import { X, CheckCircle2, Circle, SkipForward, Trash2, Loader2, AlertCircle, Pencil } from 'lucide-react'
 import { useSkipFeature, useDeleteFeature } from '../hooks/useProjects'
+import { EditFeatureForm } from './EditFeatureForm'
 import type { Feature } from '../lib/types'
+
+// Generate consistent color for category (matches FeatureCard pattern)
+function getCategoryColor(category: string): string {
+  const colors = [
+    '#ff006e', // pink (accent)
+    '#00b4d8', // cyan (progress)
+    '#70e000', // green (done)
+    '#ffd60a', // yellow (pending)
+    '#ff5400', // orange (danger)
+    '#8338ec', // purple
+    '#3a86ff', // blue
+  ]
+
+  let hash = 0
+  for (let i = 0; i < category.length; i++) {
+    hash = category.charCodeAt(i) + ((hash << 5) - hash)
+  }
+
+  return colors[Math.abs(hash) % colors.length]
+}
 
 interface FeatureModalProps {
   feature: Feature
@@ -12,6 +33,7 @@ interface FeatureModalProps {
 export function FeatureModal({ feature, projectName, onClose }: FeatureModalProps) {
   const [error, setError] = useState<string | null>(null)
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
 
   const skipFeature = useSkipFeature(projectName)
   const deleteFeature = useDeleteFeature(projectName)
@@ -36,6 +58,18 @@ export function FeatureModal({ feature, projectName, onClose }: FeatureModalProp
     }
   }
 
+  // Show edit form when in edit mode
+  if (showEdit) {
+    return (
+      <EditFeatureForm
+        feature={feature}
+        projectName={projectName}
+        onClose={() => setShowEdit(false)}
+        onSaved={onClose}
+      />
+    )
+  }
+
   return (
     <div className="neo-modal-backdrop" onClick={onClose}>
       <div
@@ -45,7 +79,10 @@ export function FeatureModal({ feature, projectName, onClose }: FeatureModalProp
         {/* Header */}
         <div className="flex items-start justify-between p-6 border-b-3 border-[var(--color-neo-border)]">
           <div>
-            <span className="neo-badge bg-[var(--color-neo-accent)] text-white mb-2">
+            <span
+              className="neo-badge mb-2"
+              style={{ backgroundColor: getCategoryColor(feature.category), color: 'var(--color-neo-text-on-bright)' }}
+            >
               {feature.category}
             </span>
             <h2 className="font-display text-2xl font-bold">
@@ -64,12 +101,12 @@ export function FeatureModal({ feature, projectName, onClose }: FeatureModalProp
         <div className="p-6 space-y-6">
           {/* Error Message */}
           {error && (
-            <div className="flex items-center gap-3 p-4 bg-[var(--color-neo-danger)] text-white border-3 border-[var(--color-neo-border)]">
+            <div className="flex items-center gap-3 p-4 bg-[var(--color-neo-error-bg)] text-[var(--color-neo-error-text)] border-3 border-[var(--color-neo-error-border)]">
               <AlertCircle size={20} />
               <span>{error}</span>
               <button
                 onClick={() => setError(null)}
-                className="ml-auto"
+                className="ml-auto hover:opacity-70 transition-opacity"
               >
                 <X size={16} />
               </button>
@@ -160,6 +197,14 @@ export function FeatureModal({ feature, projectName, onClose }: FeatureModalProp
             ) : (
               <div className="flex gap-3">
                 <button
+                  onClick={() => setShowEdit(true)}
+                  disabled={skipFeature.isPending}
+                  className="neo-btn neo-btn-primary flex-1"
+                >
+                  <Pencil size={18} />
+                  Edit
+                </button>
+                <button
                   onClick={handleSkip}
                   disabled={skipFeature.isPending}
                   className="neo-btn neo-btn-warning flex-1"
@@ -169,7 +214,7 @@ export function FeatureModal({ feature, projectName, onClose }: FeatureModalProp
                   ) : (
                     <>
                       <SkipForward size={18} />
-                      Skip (Move to End)
+                      Skip
                     </>
                   )}
                 </button>

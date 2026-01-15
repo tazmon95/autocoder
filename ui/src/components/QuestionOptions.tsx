@@ -97,7 +97,7 @@ export function QuestionOptions({
         >
           {/* Question header */}
           <div className="flex items-center gap-3 mb-4">
-            <span className="neo-badge bg-[var(--color-neo-accent)] text-white">
+            <span className="neo-badge bg-[var(--color-neo-accent)] text-[var(--color-neo-text-on-bright)]">
               {q.header}
             </span>
             <span className="font-bold text-[var(--color-neo-text)]">
@@ -126,11 +126,24 @@ export function QuestionOptions({
                     transition-all duration-150
                     ${
                       isSelected
-                        ? 'bg-[var(--color-neo-pending)] shadow-[2px_2px_0px_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]'
-                        : 'bg-[var(--color-neo-card)] shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_rgba(0,0,0,1)]'
+                        ? 'bg-[var(--color-neo-pending)] translate-x-[1px] translate-y-[1px]'
+                        : 'bg-[var(--color-neo-card)] hover:translate-x-[-1px] hover:translate-y-[-1px]'
                     }
                     disabled:opacity-50 disabled:cursor-not-allowed
                   `}
+                  style={{
+                    boxShadow: isSelected ? 'var(--shadow-neo-sm)' : 'var(--shadow-neo-md)',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected && !disabled) {
+                      e.currentTarget.style.boxShadow = 'var(--shadow-neo-lg)'
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected && !disabled) {
+                      e.currentTarget.style.boxShadow = 'var(--shadow-neo-md)'
+                    }
+                  }}
                 >
                   <div className="flex items-start gap-2">
                     {/* Checkbox/Radio indicator */}
@@ -169,11 +182,24 @@ export function QuestionOptions({
                 transition-all duration-150
                 ${
                   showCustomInput[String(questionIdx)]
-                    ? 'bg-[var(--color-neo-pending)] shadow-[2px_2px_0px_rgba(0,0,0,1)] translate-x-[1px] translate-y-[1px]'
-                    : 'bg-[var(--color-neo-card)] shadow-[4px_4px_0px_rgba(0,0,0,1)] hover:translate-x-[-1px] hover:translate-y-[-1px] hover:shadow-[5px_5px_0px_rgba(0,0,0,1)]'
+                    ? 'bg-[var(--color-neo-pending)] translate-x-[1px] translate-y-[1px]'
+                    : 'bg-[var(--color-neo-card)] hover:translate-x-[-1px] hover:translate-y-[-1px]'
                 }
                 disabled:opacity-50 disabled:cursor-not-allowed
               `}
+              style={{
+                boxShadow: showCustomInput[String(questionIdx)] ? 'var(--shadow-neo-sm)' : 'var(--shadow-neo-md)',
+              }}
+              onMouseEnter={(e) => {
+                if (!showCustomInput[String(questionIdx)] && !disabled) {
+                  e.currentTarget.style.boxShadow = 'var(--shadow-neo-lg)'
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!showCustomInput[String(questionIdx)] && !disabled) {
+                  e.currentTarget.style.boxShadow = 'var(--shadow-neo-md)'
+                }
+              }}
             >
               <div className="flex items-start gap-2">
                 <div

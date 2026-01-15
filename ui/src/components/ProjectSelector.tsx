@@ -108,7 +108,7 @@ export function ProjectSelector({
                     key={project.name}
                     className={`flex items-center ${
                       project.name === selectedProject
-                        ? 'bg-[var(--color-neo-pending)] text-black'
+                        ? 'bg-[var(--color-neo-pending)] text-[var(--color-neo-text-on-bright)]'
                         : ''
                     }`}
                   >

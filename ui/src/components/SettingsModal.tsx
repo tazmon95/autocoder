@@ -144,14 +144,14 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
 
         {/* Error State */}
         {isError && (
-          <div className="p-4 bg-[var(--color-neo-danger)] text-white border-3 border-[var(--color-neo-border)] mb-4">
+          <div className="p-4 bg-[var(--color-neo-error-bg)] text-[var(--color-neo-error-text)] border-3 border-[var(--color-neo-error-border)] mb-4">
             <div className="flex items-center gap-2">
               <AlertCircle size={18} />
               <span>Failed to load settings</span>
             </div>
             <button
               onClick={() => refetch()}
-              className="mt-2 underline text-sm"
+              className="mt-2 underline text-sm hover:opacity-70 transition-opacity"
             >
               Retry
             </button>
@@ -254,8 +254,8 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
                     aria-checked={settings.model === model.id}
                     className={`flex-1 py-3 px-4 font-display font-bold text-sm transition-colors ${
                       settings.model === model.id
-                        ? 'bg-[var(--color-neo-accent)] text-white'
-                        : 'bg-[var(--color-neo-card)] text-[var(--color-neo-text)] hover:bg-[var(--color-neo-bg)]'
+                        ? 'bg-[var(--color-neo-accent)] text-[var(--color-neo-text-on-bright)]'
+                        : 'bg-[var(--color-neo-card)] text-[var(--color-neo-text)] hover:bg-[var(--color-neo-hover-subtle)]'
                     } ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {model.name}
@@ -266,7 +266,7 @@ export function SettingsModal({ onClose }: SettingsModalProps) {
 
             {/* Update Error */}
             {updateSettings.isError && (
-              <div className="p-3 bg-red-50 border-3 border-red-200 text-red-700 text-sm">
+              <div className="p-3 bg-[var(--color-neo-error-bg)] border-3 border-[var(--color-neo-error-border)] text-[var(--color-neo-error-text)] text-sm">
                 Failed to save settings. Please try again.
               </div>
             )}

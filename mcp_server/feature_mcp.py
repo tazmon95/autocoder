@@ -429,6 +429,7 @@ def feature_create_bulk(
                     description=feature_data["description"],
                     steps=feature_data["steps"],
                     passes=False,
+                    in_progress=False,
                 )
                 session.add(db_feature)
                 created_count += 1
@@ -563,6 +564,7 @@ def feature_create(
                 description=description,
                 steps=steps,
                 passes=False,
+                in_progress=False,
             )
             session.add(db_feature)
             session.commit()

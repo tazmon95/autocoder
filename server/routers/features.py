@@ -17,6 +17,7 @@ from ..schemas import (
     FeatureCreate,
     FeatureListResponse,
     FeatureResponse,
+    FeatureUpdate,
 )
 from ..utils.validation import validate_project_name
 
@@ -72,7 +73,10 @@ def get_db_session(project_dir: Path):
 
 
 def feature_to_response(f) -> FeatureResponse:
-    """Convert a Feature model to a FeatureResponse."""
+    """Convert a Feature model to a FeatureResponse.
+
+    Handles legacy NULL values in boolean fields by treating them as False.
+    """
     return FeatureResponse(
         id=f.id,
         priority=f.priority,
@@ -80,8 +84,9 @@ def feature_to_response(f) -> FeatureResponse:
         name=f.name,
         description=f.description,
         steps=f.steps if isinstance(f.steps, list) else [],
-        passes=f.passes,
-        in_progress=f.in_progress,
+        # Handle legacy NULL values gracefully - treat as False
+        passes=f.passes if f.passes is not None else False,
+        in_progress=f.in_progress if f.in_progress is not None else False,
     )
 
 
@@ -170,6 +175,7 @@ async def create_feature(project_name: str, feature: FeatureCreate):
                 description=feature.description,
                 steps=feature.steps,
                 passes=False,
+                in_progress=False,
             )
 
             session.add(db_feature)
@@ -215,6 +221,63 @@ async def get_feature(project_name: str, feature_id: int):
     except Exception:
         logger.exception("Database error in get_feature")
         raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+@router.patch("/{feature_id}", response_model=FeatureResponse)
+async def update_feature(project_name: str, feature_id: int, update: FeatureUpdate):
+    """
+    Update a feature's details.
+
+    Only features that are not yet completed (passes=False) can be edited.
+    This allows users to provide corrections or additional instructions
+    when the agent is stuck or implementing a feature incorrectly.
+    """
+    project_name = validate_project_name(project_name)
+    project_dir = _get_project_path(project_name)
+
+    if not project_dir:
+        raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found in registry")
+
+    if not project_dir.exists():
+        raise HTTPException(status_code=404, detail="Project directory not found")
+
+    _, Feature = _get_db_classes()
+
+    try:
+        with get_db_session(project_dir) as session:
+            feature = session.query(Feature).filter(Feature.id == feature_id).first()
+
+            if not feature:
+                raise HTTPException(status_code=404, detail=f"Feature {feature_id} not found")
+
+            # Prevent editing completed features
+            if feature.passes:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Cannot edit a completed feature. Features marked as done are immutable."
+                )
+
+            # Apply updates for non-None fields
+            if update.category is not None:
+                feature.category = update.category
+            if update.name is not None:
+                feature.name = update.name
+            if update.description is not None:
+                feature.description = update.description
+            if update.steps is not None:
+                feature.steps = update.steps
+            if update.priority is not None:
+                feature.priority = update.priority
+
+            session.commit()
+            session.refresh(feature)
+
+            return feature_to_response(feature)
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("Failed to update feature")
+        raise HTTPException(status_code=500, detail="Failed to update feature")
 
 
 @router.delete("/{feature_id}")
@@ -435,6 +498,7 @@ async def create_features_bulk(project_name: str, bulk: FeatureBulkCreate):
                     description=feature_data.description,
                     steps=feature_data.steps,
                     passes=False,
+                    in_progress=False,
                 )
                 session.add(db_feature)
                 session.flush()  # Flush to get the ID immediately
