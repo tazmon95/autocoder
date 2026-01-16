@@ -322,7 +322,21 @@ function App() {
                 className="w-full flex items-center justify-between p-4 hover:bg-[var(--color-neo-hover-subtle)] transition-colors"
                 title="Toggle progress panel (P)"
               >
-                <h2 className="font-display text-xl font-bold uppercase">Progress</h2>
+                <div className="flex items-center gap-4">
+                  <h2 className="font-display text-xl font-bold uppercase">Progress</h2>
+                  {progressCollapsed && (
+                    <div className="flex items-center gap-3">
+                      <span className="font-display text-xl font-bold text-[var(--color-neo-accent)]">
+                        {progress.percentage.toFixed(1)}%
+                      </span>
+                      <span className="text-sm text-[var(--color-neo-text-secondary)]">
+                        <span className="text-[var(--color-neo-done)] font-bold">{progress.passing}</span>
+                        {' / '}
+                        <span className="font-bold">{progress.total}</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center gap-2">
                   {wsState.isConnected ? (
                     <span className="text-sm text-[var(--color-neo-done)]">Live</span>
