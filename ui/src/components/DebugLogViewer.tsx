@@ -326,7 +326,7 @@ export function DebugLogViewer({
 
       {/* Header bar */}
       <div
-        className="flex items-center justify-between h-10 px-4 bg-[var(--color-neo-border)] border-t-3 border-[var(--color-neo-text)]"
+        className="flex items-center justify-between h-10 px-4 bg-[var(--color-neo-terminal-header)] border-t-3 border-[var(--color-neo-border)]"
       >
         <div className="flex items-center gap-2">
           {/* Collapse/expand toggle */}
@@ -335,7 +335,7 @@ export function DebugLogViewer({
             className="flex items-center gap-2 hover:bg-[var(--color-neo-hover-subtle)] px-2 py-1 rounded transition-colors cursor-pointer"
           >
             <TerminalIcon size={16} className="text-[var(--color-neo-done)]" />
-            <span className="font-mono text-sm text-[var(--color-neo-bg)] font-bold">
+            <span className="font-mono text-sm text-[var(--color-neo-terminal-text)] font-bold">
               Debug
             </span>
             <span className="px-1.5 py-0.5 text-xs font-mono bg-[var(--color-neo-card)] text-[var(--color-neo-text-muted)] rounded" title="Toggle debug panel">
@@ -447,7 +447,7 @@ export function DebugLogViewer({
 
       {/* Content area */}
       {isOpen && (
-        <div className="h-[calc(100%-2.5rem)] bg-[var(--color-neo-border)]">
+        <div className="h-[calc(100%-2.5rem)] bg-[var(--color-neo-terminal-bg)]">
           {/* Agent Logs Tab */}
           {activeTab === 'agent' && (
             <div
@@ -456,7 +456,7 @@ export function DebugLogViewer({
               className="h-full overflow-y-auto p-2 font-mono text-sm"
             >
               {logs.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-[var(--color-neo-text-muted)]">
+                <div className="flex items-center justify-center h-full text-[var(--color-neo-terminal-text-muted)]">
                   No logs yet. Start the agent to see output.
                 </div>
               ) : (
@@ -469,9 +469,9 @@ export function DebugLogViewer({
                     return (
                       <div
                         key={`${log.timestamp}-${index}`}
-                        className="flex gap-2 hover:bg-[var(--color-neo-hover-subtle)] px-1 py-0.5 rounded"
+                        className="flex gap-2 hover:bg-white/5 px-1 py-0.5 rounded"
                       >
-                        <span className="text-[var(--color-neo-text-muted)] select-none shrink-0">
+                        <span className="text-[var(--color-neo-terminal-text-muted)] select-none shrink-0">
                           {timestamp}
                         </span>
                         <span className={`${colorClass} whitespace-pre-wrap break-all`}>
@@ -493,7 +493,7 @@ export function DebugLogViewer({
               className="h-full overflow-y-auto p-2 font-mono text-sm"
             >
               {devLogs.length === 0 ? (
-                <div className="flex items-center justify-center h-full text-[var(--color-neo-text-muted)]">
+                <div className="flex items-center justify-center h-full text-[var(--color-neo-terminal-text-muted)]">
                   No dev server logs yet.
                 </div>
               ) : (
@@ -506,9 +506,9 @@ export function DebugLogViewer({
                     return (
                       <div
                         key={`${log.timestamp}-${index}`}
-                        className="flex gap-2 hover:bg-[var(--color-neo-hover-subtle)] px-1 py-0.5 rounded"
+                        className="flex gap-2 hover:bg-white/5 px-1 py-0.5 rounded"
                       >
-                        <span className="text-[var(--color-neo-text-muted)] select-none shrink-0">
+                        <span className="text-[var(--color-neo-terminal-text-muted)] select-none shrink-0">
                           {timestamp}
                         </span>
                         <span className={`${colorClass} whitespace-pre-wrap break-all`}>
@@ -540,11 +540,11 @@ export function DebugLogViewer({
               {/* Terminal content - render all terminals and show/hide to preserve buffers */}
               <div className="flex-1 min-h-0 relative">
                 {isLoadingTerminals ? (
-                  <div className="h-full flex items-center justify-center text-[var(--color-neo-text-muted)] font-mono text-sm">
+                  <div className="h-full flex items-center justify-center text-[var(--color-neo-terminal-text-muted)] font-mono text-sm">
                     Loading terminals...
                   </div>
                 ) : terminals.length === 0 ? (
-                  <div className="h-full flex items-center justify-center text-[var(--color-neo-text-muted)] font-mono text-sm">
+                  <div className="h-full flex items-center justify-center text-[var(--color-neo-terminal-text-muted)] font-mono text-sm">
                     No terminal available
                   </div>
                 ) : (

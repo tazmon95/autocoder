@@ -130,16 +130,17 @@ For each new capability, estimate features:
 
 # FEATURE CREATION
 
-Once the user approves, create features using the MCP tool.
+Once the user approves, create features by outputting them in a special XML format.
 
 **Signal that you're ready to create features by saying:**
 
 > "Great! I'll create these N features now."
 
-**Then call the `feature_create_bulk` tool to save them directly to the database:**
+**Then output the features using `<features_to_create>` tags:**
 
 ```
-feature_create_bulk(features=[
+<features_to_create>
+[
   {
     "category": "functional",
     "name": "Brief feature name",
@@ -160,15 +161,17 @@ feature_create_bulk(features=[
       "Step 3: Verify styling"
     ]
   }
-])
+]
+</features_to_create>
 ```
 
 **CRITICAL:**
-- Call the `feature_create_bulk` MCP tool with ALL features at once
+- Wrap ALL features in a single `<features_to_create>` block containing a JSON array
 - Use valid JSON (double quotes, no trailing commas)
-- Include ALL features you promised to create
+- Include ALL features you promised to create in ONE block
 - Each feature needs: category, name, description, steps (array of strings)
-- The tool will return the count of created features - verify it matches your expected count
+- The system will automatically parse this and create features in the database
+- After outputting the block, confirm how many features were created
 
 ---
 

@@ -302,7 +302,10 @@ class AgentProcessManager:
 
     async def stop(self) -> tuple[bool, str]:
         """
-        Stop the agent (SIGTERM then SIGKILL if needed).
+        Stop the agent and all its child processes.
+
+        Uses psutil to kill the entire process tree to ensure Claude
+        subprocesses are also terminated.
 
         Returns:
             Tuple of (success, message)
@@ -319,20 +322,59 @@ class AgentProcessManager:
                 except asyncio.CancelledError:
                     pass
 
-            # Terminate gracefully first
-            self.process.terminate()
+            # Get the process tree using psutil
+            try:
+                parent = psutil.Process(self.process.pid)
+                children = parent.children(recursive=True)
+            except psutil.NoSuchProcess:
+                # Process already dead
+                self._remove_lock()
+                self.status = "stopped"
+                self.process = None
+                self.started_at = None
+                self.yolo_mode = False
+                self.model = None
+                return True, "Agent already stopped"
 
-            # Wait up to 5 seconds for graceful shutdown
+            # Terminate all children first, then parent
+            for child in children:
+                try:
+                    child.terminate()
+                except psutil.NoSuchProcess:
+                    pass
+
+            # Terminate parent
+            try:
+                parent.terminate()
+            except psutil.NoSuchProcess:
+                pass
+
+            # Wait briefly for graceful shutdown
             loop = asyncio.get_running_loop()
+            await asyncio.sleep(0.5)
+
+            # Force kill any remaining processes
+            for child in children:
+                try:
+                    if child.is_running():
+                        child.kill()
+                except psutil.NoSuchProcess:
+                    pass
+
+            try:
+                if parent.is_running():
+                    parent.kill()
+            except psutil.NoSuchProcess:
+                pass
+
+            # Wait for process to fully terminate
             try:
                 await asyncio.wait_for(
                     loop.run_in_executor(None, self.process.wait),
-                    timeout=5.0
+                    timeout=2.0
                 )
             except asyncio.TimeoutError:
-                # Force kill if still running
-                self.process.kill()
-                await loop.run_in_executor(None, self.process.wait)
+                pass  # Process should be dead by now
 
             self._remove_lock()
             self.status = "stopped"
@@ -341,7 +383,8 @@ class AgentProcessManager:
             self.yolo_mode = False  # Reset YOLO mode
             self.model = None  # Reset model
 
-            return True, "Agent stopped"
+            killed_count = len(children) + 1
+            return True, f"Agent stopped ({killed_count} processes terminated)"
         except Exception as e:
             logger.exception("Failed to stop agent")
             return False, f"Failed to stop agent: {e}"
