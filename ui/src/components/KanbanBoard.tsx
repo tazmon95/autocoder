@@ -8,9 +8,10 @@ interface KanbanBoardProps {
   onFeatureClick: (feature: Feature) => void
   onAddFeature?: () => void
   onExpandProject?: () => void
+  showFilter?: boolean
 }
 
-export function KanbanBoard({ features, onFeatureClick, onAddFeature, onExpandProject }: KanbanBoardProps) {
+export function KanbanBoard({ features, onFeatureClick, onAddFeature, onExpandProject, showFilter = false }: KanbanBoardProps) {
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string>('')
 
@@ -72,7 +73,7 @@ export function KanbanBoard({ features, onFeatureClick, onAddFeature, onExpandPr
   return (
     <div className="space-y-4">
       {/* Filter Bar */}
-      {hasFeatures && (
+      {hasFeatures && showFilter && (
         <div className="neo-card p-4">
           <div className="flex flex-wrap items-center gap-4">
             {/* Search Input */}

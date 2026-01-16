@@ -7,7 +7,6 @@ import { useCelebration } from './hooks/useCelebration'
 import { ProjectSelector } from './components/ProjectSelector'
 import { KanbanBoard } from './components/KanbanBoard'
 import { AgentControl } from './components/AgentControl'
-import { ProgressDashboard } from './components/ProgressDashboard'
 import { SetupWizard } from './components/SetupWizard'
 import { AddFeatureForm } from './components/AddFeatureForm'
 import { FeatureModal } from './components/FeatureModal'
@@ -18,7 +17,7 @@ import { AssistantPanel } from './components/AssistantPanel'
 import { ExpandProjectModal } from './components/ExpandProjectModal'
 import { SettingsModal } from './components/SettingsModal'
 import { DevServerControl } from './components/DevServerControl'
-import { Loader2, Settings, Moon, Sun } from 'lucide-react'
+import { Loader2, Settings, Moon, Sun, Filter, ChevronUp, ChevronDown } from 'lucide-react'
 import type { Feature } from './lib/types'
 
 const STORAGE_KEY = 'autocoder-selected-project'
@@ -54,6 +53,8 @@ function App() {
   const [assistantOpen, setAssistantOpen] = useState(false)
   const [showSettings, setShowSettings] = useState(false)
   const [isSpecCreating, setIsSpecCreating] = useState(false)
+  const [showFilter, setShowFilter] = useState(false)
+  const [progressCollapsed, setProgressCollapsed] = useState(false)
   const [darkMode, setDarkMode] = useState(() => {
     try {
       return localStorage.getItem(DARK_MODE_KEY) === 'true'
@@ -171,6 +172,18 @@ function App() {
         setShowSettings(true)
       }
 
+      // F : Toggle filter panel (when project selected)
+      if ((e.key === 'f' || e.key === 'F') && selectedProject) {
+        e.preventDefault()
+        setShowFilter(prev => !prev)
+      }
+
+      // P : Toggle progress panel collapse (when project selected)
+      if ((e.key === 'p' || e.key === 'P') && selectedProject) {
+        e.preventDefault()
+        setProgressCollapsed(prev => !prev)
+      }
+
       // Escape : Close modals
       if (e.key === 'Escape') {
         if (showExpandProject) {
@@ -191,7 +204,7 @@ function App() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedProject, showAddFeature, showExpandProject, selectedFeature, debugOpen, debugActiveTab, assistantOpen, features, showSettings, isSpecCreating])
+  }, [selectedProject, showAddFeature, showExpandProject, selectedFeature, debugOpen, debugActiveTab, assistantOpen, features, showSettings, isSpecCreating, showFilter, progressCollapsed])
 
   // Combine WebSocket progress with feature data
   const progress = wsState.progress.total > 0 ? wsState.progress : {
@@ -241,6 +254,15 @@ function App() {
                     status={wsState.devServerStatus}
                     url={wsState.devServerUrl}
                   />
+
+                  <button
+                    onClick={() => setShowFilter(!showFilter)}
+                    className={`neo-btn text-sm py-2 px-3 ${showFilter ? 'bg-[var(--color-neo-accent)] text-[var(--color-neo-text-on-bright)]' : ''}`}
+                    title="Toggle filter (F)"
+                    aria-label="Toggle feature filter"
+                  >
+                    <Filter size={18} />
+                  </button>
 
                   <button
                     onClick={() => setShowSettings(true)}
@@ -293,13 +315,68 @@ function App() {
           </div>
         ) : (
           <div className="space-y-8">
-            {/* Progress Dashboard */}
-            <ProgressDashboard
-              passing={progress.passing}
-              total={progress.total}
-              percentage={progress.percentage}
-              isConnected={wsState.isConnected}
-            />
+            {/* Progress Dashboard - Collapsible */}
+            <div className="neo-card overflow-hidden">
+              <button
+                onClick={() => setProgressCollapsed(!progressCollapsed)}
+                className="w-full flex items-center justify-between p-4 hover:bg-[var(--color-neo-hover-subtle)] transition-colors"
+                title="Toggle progress panel (P)"
+              >
+                <h2 className="font-display text-xl font-bold uppercase">Progress</h2>
+                <div className="flex items-center gap-2">
+                  {wsState.isConnected ? (
+                    <span className="text-sm text-[var(--color-neo-done)]">Live</span>
+                  ) : (
+                    <span className="text-sm text-[var(--color-neo-danger)]">Offline</span>
+                  )}
+                  {progressCollapsed ? <ChevronDown size={20} /> : <ChevronUp size={20} />}
+                </div>
+              </button>
+              {!progressCollapsed && (
+                <div className="px-6 pb-6">
+                  {/* Large Percentage */}
+                  <div className="text-center mb-6">
+                    <span className="inline-flex items-baseline">
+                      <span className="font-display text-6xl font-bold">
+                        {progress.percentage.toFixed(1)}
+                      </span>
+                      <span className="font-display text-3xl font-bold text-[var(--color-neo-text-secondary)]">
+                        %
+                      </span>
+                    </span>
+                  </div>
+
+                  {/* Progress Bar */}
+                  <div className="neo-progress mb-4">
+                    <div
+                      className="neo-progress-fill"
+                      style={{ width: `${progress.percentage}%` }}
+                    />
+                  </div>
+
+                  {/* Stats */}
+                  <div className="flex justify-center gap-8 text-center">
+                    <div>
+                      <span className="font-mono text-3xl font-bold text-[var(--color-neo-done)]">
+                        {progress.passing}
+                      </span>
+                      <span className="block text-sm text-[var(--color-neo-text-secondary)] uppercase">
+                        Passing
+                      </span>
+                    </div>
+                    <div className="text-4xl text-[var(--color-neo-text-secondary)]">/</div>
+                    <div>
+                      <span className="font-mono text-3xl font-bold">
+                        {progress.total}
+                      </span>
+                      <span className="block text-sm text-[var(--color-neo-text-secondary)] uppercase">
+                        Total
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Agent Thought - shows latest agent narrative */}
             <AgentThought
@@ -330,6 +407,7 @@ function App() {
               onFeatureClick={setSelectedFeature}
               onAddFeature={() => setShowAddFeature(true)}
               onExpandProject={() => setShowExpandProject(true)}
+              showFilter={showFilter}
             />
           </div>
         )}
