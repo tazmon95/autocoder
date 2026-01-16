@@ -522,17 +522,17 @@ Write this JSON file:
 
 **After writing the status file**, register the project so it appears in the AutoCoder UI.
 
-Run this command using Bash:
+Run this command using Bash (from the autocoder directory):
 
 ```bash
-python /home/john/autocoder/register_project.py "<project_name>" "$ARGUMENTS"
+python register_project.py "<project_name>" "$ARGUMENTS"
 ```
 
 Where `<project_name>` is derived from the project path (the last directory component, e.g., `my-app` from `~/projects/my-app`).
 
 **Example:**
 ```bash
-python /home/john/autocoder/register_project.py "my-app" "/home/john/projects/my-app"
+python register_project.py "my-app" "/home/user/projects/my-app"
 ```
 
 **Note:** If the project is already registered, this will succeed silently. This ensures projects created via `/create-spec` appear in the UI dropdown.

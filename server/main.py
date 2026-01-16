@@ -72,31 +72,51 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS - allow all origins for LAN access
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# LAN access configuration (opt-in via environment variable)
+LAN_ACCESS_ENABLED = os.getenv("AUTOCODER_LAN_ACCESS", "0") == "1"
+
+# CORS configuration
+# When LAN access is enabled, allow all origins but disable credentials (per CORS spec)
+# When LAN access is disabled (default), use specific localhost origins with credentials
+if LAN_ACCESS_ENABLED:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_credentials=False,  # Cannot use credentials with wildcard origins
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+else:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "http://localhost:5173",      # Vite dev server
+            "http://127.0.0.1:5173",
+            "http://localhost:8888",      # Production
+            "http://127.0.0.1:8888",
+        ],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 # ============================================================================
-# Security Middleware (disabled for LAN access)
+# Security Middleware
 # ============================================================================
 
-# NOTE: Localhost restriction removed to allow LAN access
-# @app.middleware("http")
-# async def require_localhost(request: Request, call_next):
-#     """Only allow requests from localhost."""
-#     client_host = request.client.host if request.client else None
-#
-#     # Allow localhost connections
-#     if client_host not in ("127.0.0.1", "::1", "localhost", None):
-#         raise HTTPException(status_code=403, detail="Localhost access only")
-#
-#     return await call_next(request)
+# Only enforce localhost restriction when LAN access is not enabled
+if not LAN_ACCESS_ENABLED:
+    @app.middleware("http")
+    async def require_localhost(request: Request, call_next):
+        """Only allow requests from localhost."""
+        client_host = request.client.host if request.client else None
+
+        # Allow localhost connections
+        if client_host not in ("127.0.0.1", "::1", "localhost", None):
+            raise HTTPException(status_code=403, detail="Localhost access only. Set AUTOCODER_LAN_ACCESS=1 to enable LAN access.")
+
+        return await call_next(request)
 
 
 # ============================================================================

@@ -53,11 +53,20 @@ export function AgentThought({ logs, agentStatus }: AgentThoughtProps) {
   const [displayedThought, setDisplayedThought] = useState<string | null>(null)
   const [textVisible, setTextVisible] = useState(true)
   const [isVisible, setIsVisible] = useState(false)
+  const [now, setNow] = useState(Date.now())
 
   // Get last log timestamp for idle detection
   const lastLogTimestamp = logs.length > 0
     ? new Date(logs[logs.length - 1].timestamp).getTime()
     : 0
+
+  // Update `now` periodically when paused to enable idle timeout
+  useEffect(() => {
+    if (agentStatus === 'paused') {
+      const interval = setInterval(() => setNow(Date.now()), 1000)
+      return () => clearInterval(interval)
+    }
+  }, [agentStatus])
 
   // Determine if component should be visible
   // Use displayedThought for visibility check to prevent flickering when
@@ -67,10 +76,10 @@ export function AgentThought({ logs, agentStatus }: AgentThoughtProps) {
     if (!hasContent) return false
     if (agentStatus === 'running') return true
     if (agentStatus === 'paused') {
-      return Date.now() - lastLogTimestamp < IDLE_TIMEOUT
+      return now - lastLogTimestamp < IDLE_TIMEOUT
     }
     return false
-  }, [thought, displayedThought, agentStatus, lastLogTimestamp])
+  }, [thought, displayedThought, agentStatus, lastLogTimestamp, now])
 
   // Animate text changes using CSS transitions
   // Only update displayedThought when we have a new valid thought

@@ -25,11 +25,14 @@ const DARK_MODE_KEY = 'autocoder-dark-mode'
 
 // Apply dark mode on initial load (before React renders)
 function initDarkMode() {
-  const saved = localStorage.getItem(DARK_MODE_KEY)
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  const isDark = saved !== null ? saved === 'true' : prefersDark
-  if (isDark) {
-    document.documentElement.classList.add('dark')
+  if (typeof window === 'undefined') return
+  try {
+    const saved = window.localStorage.getItem(DARK_MODE_KEY)
+    const prefersDark = window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ?? false
+    const isDark = saved !== null ? saved === 'true' : prefersDark
+    document.documentElement.classList.toggle('dark', isDark)
+  } catch {
+    // Ignore localStorage/matchMedia failures (keep default theme)
   }
 }
 initDarkMode()
